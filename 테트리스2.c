@@ -593,9 +593,7 @@ void down_block(int loc_arr[row][col])
 void SPbar(int loc_arr[row][col])
 {
 	while ((ground(loc_arr) != -1 && s_block(loc_arr) != 0))
-	{
 		down_block(loc_arr);
-	}
 }
 
 void gameplay_1()
@@ -636,10 +634,9 @@ void gameplay_1()
 		x = 0, y = 0;
 		full = 0;
 		if (kbhit())
-		{
 			move = key_control(cursor, &x, &y, &rotation, loc_arr.loc_arr);
-			shadow(loc_arr.loc_arr);
-		}
+					
+		
 		if (move == 1)
 			move_block(loc_arr.loc_arr, x, y);
 		if (move == 2)
@@ -672,6 +669,7 @@ void gameplay_1()
 			next_block = sel_block();
 			next_block_print(42, 6, next_block);
 		}
+		shadow(loc_arr.loc_arr);
 		if (time % lev == 0)
 			down_block(loc_arr.loc_arr);
 		time += 2;
@@ -690,6 +688,7 @@ void gameplay_1()
 	{
 		gotoxy(43, 15);
 		printf("실패");
+		Sleep(3000);
 	}
 	else if (end == 1)
 	{
@@ -826,20 +825,21 @@ void save_score(double score)									/*점수 저장 함수*/
 
 	int i, j, k = 0;
 
-	if ((fp = fopen("score.txt", "r")) == NULL);			/*읽기 모드로 score.txt 열기*/
+	if ((fp = fopen("score", "rb")) == NULL);			/*읽기 모드로 score.txt 열기*/
 
 	else {													/*파일이 있다면*/
 		if (fp != NULL)
 		{
 			for (k = 0; k < 10; k++)						/*score.txt 에 있는 값을 배열 file에 입력*/
-				if (fscanf(fp, "%s %lf", file[k].name, &file[k].score) == EOF)
+				//if (fscanf(fp, "%s %lf", file[k].name, &file[k].score) == EOF)
+				if(fread(&file[k], sizeof(file), 1, fp) == EOF)
 					break;
 		}
 
 		fclose(fp);											/*파일 닫기*/
 	}
 
-	if ((fp = fopen("score.txt", "w")) == NULL)				/*쓰기 모드로 score.txt 열기*/
+	if ((fp = fopen("score", "wb")) == NULL)				/*쓰기 모드로 score.txt 열기*/
 	{
 		printf("파일이 열리지 않습니다.\n");
 		exit(1);
@@ -849,7 +849,7 @@ void save_score(double score)									/*점수 저장 함수*/
 	gets(file[k].name);										/*이름 입력 받고*/
 	file[k].score = score;									/*점수 저장*/
 	k++;
-
+	
 	for (i = 1; i < k; i++)									/*score.txt에서 받아온 값과 새로운 이름, 점수를 삽입정렬로 정렬*/
 	{
 		save = file[i];
@@ -861,7 +861,8 @@ void save_score(double score)									/*점수 저장 함수*/
 	}
 
 	for (i = k - 1; i >= 0; i--)								/*최대 10개의 값까지만 파일에 저장*/
-		fprintf(fp, "%s %lf\n", file[i].name, file[i].score);
+		fwrite(&file[i], sizeof(file), 1, fp);
+		//fprintf(fp, "%s %lf\n", file[i].name, file[i].score);
 
 	fclose(fp);												/*파일 닫기*/
 	print_score();											/*점수 출력 함수*/
@@ -877,7 +878,7 @@ void print_score()											/*점수 출력 함수*/
 	system("cls");
 	gotoxy(30, y);
 	printf("순위\t이름\t시간\n");
-	if ((fp = fopen("score.txt", "r")) == NULL)				/*읽기 모드로 score.txt 파일 열기*/
+	if ((fp = fopen("score", "rb")) == NULL)				/*읽기 모드로 score.txt 파일 열기*/
 	{
 		printf("파일이 없습니다.\n");
 		exit(1);
@@ -885,7 +886,8 @@ void print_score()											/*점수 출력 함수*/
 
 	for (i = 0; i < 10; i++)								/*배열 score에 score.txt에서 읽어온 값 저장*/
 	{
-		fscanf(fp, "%s %lf", score[i].name, &score[i].score);
+		//fscanf(fp, "%s %lf", score[i].name, &score[i].score);
+		fread(&score[i], sizeof(score), 1, fp);
 		if (strcmp(score[i].name, "0.0") == 0 && score[i].score == 0.0)
 			break;
 	}
@@ -907,30 +909,37 @@ void print_score()											/*점수 출력 함수*/
 void shadow(int loc_arr[row][col])
 {
 	int i, j;
+	Loc_arr loc_arr_b;
 
-	for (i = row - 2; i >= 0; i--)
+	for (i = 0; i < row; i++)
+	{
+		for (j = 0; j < col; j++)
+			loc_arr_b.loc_arr[i][j] = loc_arr[i][j];
+	}
+
+	for (i = row - 1; i >= 0; i--)
 	{
 		for (j = 1; j < col; j++)
 		{
 			if (loc_arr[i][j] == 6)
 				loc_arr[i][j] = 0;
-			
-			if (loc_arr[i][j] == 1)
-				loc_arr[i][j] = 7;
 		}
 	}
+	
+	while ((ground(loc_arr_b.loc_arr) != -1 && s_block(loc_arr_b.loc_arr) != 0))
+		down_block(loc_arr_b.loc_arr);
+		
+	
 
-	SPbar(loc_arr[row][col]);
-
-	for (i = row - 2; i >= 0; i--)
+	for (i = row - 1; i >= 0; i--)
 	{
 		for (j = 1; j < col; j++)
 		{
-			if (loc_arr[i][j] == 1)
+			if (loc_arr_b.loc_arr[i][j] == 1)
+			{
 				loc_arr[i][j] = 6;
-			
-			else if (loc_arr[i][j] == 7)
-				loc_arr[i][j] = 1;
+				loc_arr_b.loc_arr[i][j] = 0;
+			}
 		}
 	}
 }
