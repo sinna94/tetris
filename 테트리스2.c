@@ -825,21 +825,20 @@ void save_score(double score)									/*점수 저장 함수*/
 
 	int i, j, k = 0;
 
-	if ((fp = fopen("score", "rb")) == NULL);			/*읽기 모드로 score.txt 열기*/
+	if ((fp = fopen("score.txt", "r")) == NULL);				/*읽기 모드로 score.txt 열기*/
 
 	else {													/*파일이 있다면*/
 		if (fp != NULL)
 		{
-			for (k = 0; k < 10; k++)						/*score.txt 에 있는 값을 배열 file에 입력*/
-				//if (fscanf(fp, "%s %lf", file[k].name, &file[k].score) == EOF)
-				if(fread(&file[k], sizeof(file), 1, fp) == EOF)
+			for (k = 0; k < 10; k++)						/*score.txt에 있는 값을 배열 file에 입력*/
+				if (fscanf(fp, "%s %lf", file[k].name, &file[k].score) == EOF)
 					break;
 		}
 
 		fclose(fp);											/*파일 닫기*/
 	}
 
-	if ((fp = fopen("score", "wb")) == NULL)				/*쓰기 모드로 score.txt 열기*/
+	if ((fp = fopen("score.txt", "w")) == NULL)				/*쓰기 모드로 score.txt열기*/
 	{
 		printf("파일이 열리지 않습니다.\n");
 		exit(1);
@@ -861,8 +860,7 @@ void save_score(double score)									/*점수 저장 함수*/
 	}
 
 	for (i = k - 1; i >= 0; i--)								/*최대 10개의 값까지만 파일에 저장*/
-		fwrite(&file[i], sizeof(file), 1, fp);
-		//fprintf(fp, "%s %lf\n", file[i].name, file[i].score);
+		fprintf(fp, "%s %lf\n", file[i].name, file[i].score);
 
 	fclose(fp);												/*파일 닫기*/
 	print_score();											/*점수 출력 함수*/
@@ -878,7 +876,7 @@ void print_score()											/*점수 출력 함수*/
 	system("cls");
 	gotoxy(30, y);
 	printf("순위\t이름\t시간\n");
-	if ((fp = fopen("score", "rb")) == NULL)				/*읽기 모드로 score.txt 파일 열기*/
+	if ((fp = fopen("score.txt", "r")) == NULL)				/*읽기 모드로 score.txt파일 열기*/
 	{
 		printf("파일이 없습니다.\n");
 		exit(1);
@@ -886,8 +884,7 @@ void print_score()											/*점수 출력 함수*/
 
 	for (i = 0; i < 10; i++)								/*배열 score에 score.txt에서 읽어온 값 저장*/
 	{
-		//fscanf(fp, "%s %lf", score[i].name, &score[i].score);
-		fread(&score[i], sizeof(score), 1, fp);
+		fscanf(fp, "%s %lf", score[i].name, &score[i].score);
 		if (strcmp(score[i].name, "0.0") == 0 && score[i].score == 0.0)
 			break;
 	}
