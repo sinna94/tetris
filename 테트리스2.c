@@ -11,36 +11,58 @@
 #define SP 32
 #define row 21
 #define col 12
+#define W 119
+#define S 115
+#define A 97
+#define D 100
+#define V 118
 
+// ************ 라인 관련 함수 ******************
+void set_line(int[row][col]);											/*테두리를 그리는 함수*/
+
+// ************ 블록 관련 함수 ******************
 int sel_block(void);													/*랜덤으로 나오는 블록을 정해주는 함수*/
 void move_block(int[row][col], int, int);								/*블록을 이동시키는 함수*/
 void print_block(int[row][col], int[row][col], int, int, int);			/*블록을 출력해주는 함수*/
 void backup_block(int[row][col], int[row][col]);						/*이전과 다른 것만 출력하기 위해 백업하는 함수*/
-void gotoxy(int, int);													/*좌표 이동 함수*/
-int key_control(char, int*, int*, int*, int[row][col]);					/*키를 입력받아서 값은 반환하는 함수*/
-void set_line(int[row][col]);											/*테두리를 그리는 함수*/
-void print_line(int[row][col]);											/*테두리를 출력하는 함수*/
 int put_block(int[row][col], int, int, int, int);						/*블록을 게임판 배열에 넣는 함수*/
-int wall(int[row][col]);												/*벽에 충돌시 값을 반환하는 함수*/
-int ground(int[row][col]);												/*바닥에 블록이 닿으면 값을 반환하는 함수*/
+void down_block(int[row][col]);											/*블록이 한칸씩 내려오게 하는 함수*/
+void shadow(int[row][col]);												/*그림자 기능*/
 int rotate(int[row][col], int, int, int, int);							/*블록을 회전시키는 함수*/
 void block_ground(int[row][col]);										/*블록을 고정 블록으로 바꾸는 함수*/
+
+// ************ 블록 충돌 관련 함수 ******************
+int ground(int[row][col]);												/*바닥에 블록이 닿으면 값을 반환하는 함수*/
 int s_block(int[row][col]);												/*블록 밑이 고정 블록에 닿으면 값을 반환하는 함수*/
 int s_block_rl(int[row][col]);											/*블록 옆이 고정 블록에 닿으면 값을 반환하는 함수*/
-int line_full(int[row][col]);											/*한 줄이 꽉 차면 값을 반환하는 함수*/
-int delete_line(int[row][col], int);	   	   	   	   	   	   	   	   /*한 줄을 삭제하는 함수*/
-void down_block(int[row][col]);											/*블록이 한칸씩 내려오게 하는 함수*/
-void SPbar(int[row][col]);												/*스페이스바를 누르면 작동하는 함수*/
-void gameplay_1();														/*혼자하기 모드*/
+int wall(int[row][col]);												/*벽에 충돌시 값을 반환하는 함수*/
+
+// ************ 메뉴 함수 ******************
 void print_menu();														/*메뉴 출력 함수*/
 int select_menu();														/*메뉴 선택 함수*/
 void cursor_control(char, int *, int *);								/*메뉴 좌표 입력 함수*/
+
+// ************ 출력 함수 ******************
+void print_line(int[row][col], int, int);								/*테두리를 출력하는 함수*/
 void next_block_line_print(int, int);									/*다음에 나올 블록 칸 그리는 함수*/
 void next_block_print(int, int, int);									/*다음에 나올 블록 출력 함수*/
+
+// ************ 키 입력 함수 ******************
+int key_control(char, int*, int*, int*, int[row][col]);					/*키를 입력받아서 값은 반환하는 함수*/
+int key_control2(char, int*, int*, int*, int[row][col]);				/*키를 입력받아서 값은 반환하는 함수, 2인용*/
+void SPbar(int[row][col]);												/*스페이스바를 누르면 작동하는 함수*/
+
+// ************ 게임 기능 함수 ******************
+int line_full(int[row][col]);											/*한 줄이 꽉 차면 값을 반환하는 함수*/
+int delete_line(int[row][col], int);	   	   	   	   	   	   	   	    /*한 줄을 삭제하는 함수*/
+void gameplay_1();														/*혼자하기 모드*/
+void gameplay_2();														/*2인 모드*/
+
+// ************ 점수 함수 ******************
 void save_score(double);												/*점수 정렬, 저장 함수*/
 void print_score();														/*점수 출력 함수*/
-void shadow(int[row][col]);												/*그림자 기능*/
 
+void gotoxy(int, int);													/*좌표 이동 함수*/
 
 char block[7][4][4][4] =
 { { { { 0, 0, 0, 0 },					//L 블록
@@ -123,9 +145,9 @@ char block[7][4][4][4] =
 { 1, 1, 1, 0 },
 { 0, 1, 0, 0 },
 { 0, 0, 0, 0 } },
-{ { 0, 1, 0, 0 },
-{ 1, 1, 0, 0 },
-{ 0, 1, 0, 0 },
+{ { 0, 0, 1, 0 },
+{ 0, 1, 1, 0 },
+{ 0, 0, 1, 0 },
 { 0, 0, 0, 0 } } },
 
 { { { 0, 0, 0, 0 },					//ㄱ_ 블록
@@ -176,8 +198,12 @@ typedef struct save {													/*점수 저장하기 위한 구조체*/
 
 int main() {
 	int menu;
+	system("mode con: cols=90 lines=28");
 
-	system("mode con: cols=90 lines=35");
+	CONSOLE_CURSOR_INFO cursorInfo;
+	cursorInfo.dwSize = 1;
+	cursorInfo.bVisible = 0;
+	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
 
 	while (1)
 	{
@@ -192,7 +218,8 @@ int main() {
 			break;
 
 		case 2:
-
+			system("cls");
+			gameplay_2();
 			break;
 
 		case 3:
@@ -212,7 +239,6 @@ void gotoxy(int x, int y)
 
 int key_control(char cursor, int *x, int *y, int *rotation, int loc_arr[row][col])
 {
-	cursor = getch();
 	switch (cursor)
 	{
 	case UP:
@@ -280,14 +306,14 @@ void move_block(int loc_arr[row][col], int x, int y)
 	}
 }
 
-void print_block(int loc_arr[row][col], int loc_arr_b[row][col], int move, int x, int y)
+void print_block(int loc_arr[row][col], int loc_arr_b[row][col], int move, int ax, int ay)
 {
 	int i, j;
-	int ax = 6, ay = 2;
-
+	int a;
+	a = ax;
 	for (i = 0; i < row; i++)
 	{
-		ax = 6;
+		ax = a;
 		for (j = 0; j < col; j++)
 		{
 			if (loc_arr_b[i][j] != loc_arr[i][j])
@@ -334,11 +360,9 @@ void set_line(int loc_arr[row][col])
 	}
 }
 
-void print_line(int loc_arr[row][col])
+void print_line(int loc_arr[row][col], int ax, int ay)
 {
 	int i, j;
-	int ax = 8;
-	int ay = 2;
 
 	for (i = 0; i < row; i++)
 	{
@@ -609,9 +633,10 @@ void gameplay_1()
 	int hour, min;
 	double sec;
 	int end = 0;
-	int line_cnt = 2;
+	int line_cnt = 40;
 	int next_block;
 
+	// 2번째로 나올 블록
 	next_block = rand() % 7;
 
 	clock_t start, finish;
@@ -619,33 +644,45 @@ void gameplay_1()
 	Loc_arr loc_arr;
 	Loc_arr loc_arr_b;
 
+	// 게임 라인, 블록 출력
 	set_line(loc_arr.loc_arr);
-	print_line(loc_arr.loc_arr);
+	print_line(loc_arr.loc_arr, 8, 2);
 	next_block_line_print(40, 4);
-
 	put_block(loc_arr.loc_arr, rand_num, rotation, arr_row, arr_col);
 	next_block_print(42, 6, next_block);
 
+	// 게임 시작 
 	start = clock();
 	while (1) {
 		gotoxy(42, 15);
-		printf("남은 줄: %d", line_cnt);
+		printf("남은 줄: %0d", line_cnt);
 		move = -1;
 		x = 0, y = 0;
 		full = 0;
+
+		// 키 입력 시
 		if (kbhit())
+		{
+			cursor = getch();
 			move = key_control(cursor, &x, &y, &rotation, loc_arr.loc_arr);
-					
-		
+		}
+
+		// 블록 이동
 		if (move == 1)
 			move_block(loc_arr.loc_arr, x, y);
+		
+		// 블록 회전
 		if (move == 2)
 			rotate(loc_arr.loc_arr, x, y, rand_num, rotation);
 		
-		print_block(loc_arr.loc_arr, loc_arr_b.loc_arr, move, x, y);
+		// 블록 출력, 백업
+		print_block(loc_arr.loc_arr, loc_arr_b.loc_arr, move, 6, 2);
 		backup_block(loc_arr.loc_arr, loc_arr_b.loc_arr);
 
+		// 한줄이 꽉 찼는지 확인
 		full = line_full(loc_arr.loc_arr);
+
+		// 한줄이 꽉 찬 경우
 		if (full)
 		{
 			delete_line(loc_arr.loc_arr, full);
@@ -658,6 +695,7 @@ void gameplay_1()
 			lev -= 50;
 		}
 
+		// 블록이 바닥, 고정블록에 닿았을 경우
 		if (((ground(loc_arr.loc_arr) == -1 || s_block(loc_arr.loc_arr) == 0) && time % 10000 == 0) || move == 3)
 		{
 			block_ground(loc_arr.loc_arr);
@@ -669,11 +707,17 @@ void gameplay_1()
 			next_block = sel_block();
 			next_block_print(42, 6, next_block);
 		}
+
+		// 그림자
 		shadow(loc_arr.loc_arr);
+
+		// 시간에 따라 블록이 내려옴
 		if (time % lev == 0)
 			down_block(loc_arr.loc_arr);
+
 		time += 2;
 
+		// 현재 진행 중인 게임 시간 출력
 		finish = clock();
 		duration = (double)(finish - start) / CLOCKS_PER_SEC;
 		min = duration / 60;
@@ -683,13 +727,18 @@ void gameplay_1()
 		gotoxy(42, 3);
 		printf("%d:%.2lf", min, sec);
 	}
+
 	system("cls");
+
+	// 게임 실패
 	if (end == -1)
 	{
 		gotoxy(43, 15);
 		printf("실패");
 		Sleep(3000);
 	}
+
+	// 게임 성공
 	else if (end == 1)
 	{
 		gotoxy(43, 14);
@@ -894,7 +943,7 @@ void print_score()											/*점수 출력 함수*/
 		gotoxy(30, y + (j + 1) * 2);
 
 		min = (int)score[j].score / 60;
-		sec = score[j].score;
+		sec = score[j].score - min*60;
 
 		printf("%d.\t%s\t%d:%.2lf\n", j + 1, score[j].name, min, sec);
 	}
@@ -932,11 +981,189 @@ void shadow(int loc_arr[row][col])
 	{
 		for (j = 1; j < col; j++)
 		{
-			if (loc_arr_b.loc_arr[i][j] == 1)
+			if (loc_arr_b.loc_arr[i][j] == 1 && loc_arr[i][j] != 1)
 			{
 				loc_arr[i][j] = 6;
 				loc_arr_b.loc_arr[i][j] = 0;
 			}
 		}
 	}
+}
+
+void gameplay_2()
+{
+	int rand_num1 = sel_block(), rand_num2 = rand_num1;
+	int rotation = 0;
+	char cursor = NULL;
+	int arr_row = 0, arr_col = col / 2;
+	int x1, y1, x2, y2;
+	int move1, move2, full1 = 0, full2 =0;
+	int time = 0, lev1 = 20000, lev2 = 20000;
+	int end1 = 0, end2 = 0;
+	int next_block1;
+	int next_block2;
+
+	// 2번째 나오는 블록
+	next_block1 = rand() % 7;
+	next_block2 = rand() % 7;
+
+	Loc_arr loc_arr1;
+	Loc_arr loc_arr2;
+	Loc_arr loc_arr_b1;
+	Loc_arr loc_arr_b2;
+
+	// 1p 게임 라인, 블록 출력
+	set_line(loc_arr1.loc_arr);
+	print_line(loc_arr1.loc_arr, 8, 2);
+	next_block_line_print(36, 4);
+	put_block(loc_arr1.loc_arr, rand_num1, rotation, arr_row, arr_col);
+	next_block_print(38, 6, next_block1);
+
+	// 2p 게임 라인, 블록 출력
+	set_line(loc_arr2.loc_arr);
+	print_line(loc_arr2.loc_arr, 50, 2);
+	next_block_line_print(76, 4);
+	put_block(loc_arr2.loc_arr, rand_num2, rotation, arr_row, arr_col);
+	next_block_print(78, 6, next_block2);
+
+	// 게임 진행
+	while (1) {
+		move1 = -1, move2 = -1;
+		x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+		full1 = 0, full2 = 0;
+		
+		// 1p, 2p 키 입력
+		if (kbhit())
+		{
+			cursor = getch();
+			// 1p 가 사용하는 키 입력시
+			if(cursor == UP || cursor == DOWN || cursor == LEFT || cursor == RIGHT || cursor == SP)
+				move1 = key_control(cursor, &x1, &y1, &rotation, loc_arr1.loc_arr);
+			// 2p 가 사용하는 키 입력시
+			else if(cursor == W || cursor == S || cursor == A || cursor == D || cursor == V)
+				move2 = key_control2(cursor, &x2, &y2, &rotation, loc_arr2.loc_arr);
+		}
+
+		// 1p, 2p 블록 이동
+		if (move1 == 1)
+			move_block(loc_arr1.loc_arr, x1, y1);
+		if (move2 == 1)
+			move_block(loc_arr2.loc_arr, x2, y2);
+		
+		// 1p, 2p 블록 회전
+		if (move1 == 2)
+			rotate(loc_arr1.loc_arr, x1, y1, rand_num1, rotation);
+		if (move2 == 2)
+			rotate(loc_arr2.loc_arr, x2, y2, rand_num2, rotation);
+
+		// 1p, 2p 블록 출력, 백업
+		print_block(loc_arr1.loc_arr, loc_arr_b1.loc_arr, move1, 6, 2);
+		backup_block(loc_arr1.loc_arr, loc_arr_b1.loc_arr);
+		print_block(loc_arr2.loc_arr, loc_arr_b2.loc_arr, move2, 48, 2);
+		backup_block(loc_arr2.loc_arr, loc_arr_b2.loc_arr);
+
+		// 1p, 2p 한줄이 찼는지 확인
+		full1 = line_full(loc_arr1.loc_arr);
+		full2 = line_full(loc_arr2.loc_arr);
+		
+		// 1p, 2p 한줄이 꽉 찬 경우
+		if (full1)
+		{
+			delete_line(loc_arr1.loc_arr, full1);
+			lev1 -= 50;
+		}
+
+		if (full2)
+		{
+			delete_line(loc_arr2.loc_arr, full2);
+			lev2 -= 50;
+		}
+
+		// 1p, 2p 블록이 바닥, 고정블록에 닿았을 경우
+		if (((ground(loc_arr1.loc_arr) == -1 || s_block(loc_arr1.loc_arr) == 0) && time % 10000 == 0) || move1 == 3)
+		{
+			block_ground(loc_arr1.loc_arr);
+			rotation = 0;
+			rand_num1 = next_block1;
+			end1 = put_block(loc_arr1.loc_arr, rand_num1, rotation, arr_row, arr_col);
+			if (end1 == -1)
+				break;
+			next_block1 = sel_block();
+			next_block_print(38, 6, next_block1);
+		}
+
+		if (((ground(loc_arr2.loc_arr) == -1 || s_block(loc_arr2.loc_arr) == 0) && time % 10000 == 0) || move2 == 3)
+		{
+			block_ground(loc_arr2.loc_arr);
+			rotation = 0;
+			rand_num2 = next_block2;
+			end2 = put_block(loc_arr2.loc_arr, rand_num2, rotation, arr_row, arr_col);
+			if (end2 == -1)
+				break;
+			next_block2 = sel_block();
+			next_block_print(78, 6, next_block2);
+		}
+		
+		// 1p, 2p 그림자
+		shadow(loc_arr1.loc_arr); 
+		shadow(loc_arr2.loc_arr);
+		
+		// 1p, 2p 시간이 지나면 블록이 내려옴
+		if (time % lev1 == 0)
+			down_block(loc_arr1.loc_arr);
+		if (time % lev2 == 0)
+			down_block(loc_arr2.loc_arr);
+
+		time += 2;
+	}
+
+	system("cls");
+
+	// 2p 승리
+	if (end1 == -1)
+	{
+		gotoxy(43, 15);
+		printf("2P 승리");
+		Sleep(3000);
+	}
+	
+	// 1p 승리
+	if (end2 == -1)
+	{
+		gotoxy(43, 15);
+		printf("1P 승리");
+		Sleep(3000);
+	}
+}
+
+int key_control2(char cursor, int *x, int *y, int *rotation, int loc_arr[row][col])
+{
+	switch (cursor)
+	{
+	case W:
+		if (*rotation == 3)
+			*rotation = 0;
+		else
+			(*rotation) += 1;
+		return 2;
+
+	case S:
+		if (ground(loc_arr) != -1 && s_block(loc_arr) != 0)
+			*y += 1;
+		return 1;
+
+	case A:
+		if (wall(loc_arr) != -1 && s_block_rl(loc_arr) != -1)
+			*x -= 1;
+		return 1;
+
+	case D:
+		if (wall(loc_arr) != 1 && s_block_rl(loc_arr) != 1)
+			*x += 1;
+		return 1;
+	case V:
+		SPbar(loc_arr);
+		return 3;
+	}
+	return 0;
 }
