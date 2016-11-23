@@ -54,7 +54,10 @@ void SPbar(int[row][col]);												/*스페이스바를 누르면 작동하는 함수*/
 
 // ************ 게임 기능 함수 ******************
 int line_full(int[row][col]);											/*한 줄이 꽉 차면 값을 반환하는 함수*/
-int delete_line(int[row][col], int);	   	   	   	   	   	   	   	    /*한 줄을 삭제하는 함수*/
+int search_top(int[row][col], int);										/*현재 고정 블록 중 가장 높은 위치를 찾는 함수*/
+int delete_line(int[row][col], int, int);	   	   	   	   	   	   	   	/*한 줄을 삭제하는 함수*/
+void save_line(int[row][col], int[], int);								/*삭제되는 줄 저장하는 함수*/
+void toss_line(int[row][col], int[], int);								/*삭제되는 줄을 상대편에게 보내는 함수*/
 void gameplay_1();														/*혼자하기 모드*/
 void gameplay_2();														/*2인 모드*/
 
@@ -572,7 +575,7 @@ int line_full(int loc_arr[row][col])
 	return full;
 }
 
-int delete_line(int loc_arr[row][col], int full)
+int search_top(int loc_arr[row][col], int full)
 {
 	int i, j, top = 0;
 
@@ -588,6 +591,13 @@ int delete_line(int loc_arr[row][col], int full)
 		}
 	}
 
+	return top;
+}
+
+int delete_line(int loc_arr[row][col], int full, int top)
+{
+	int i, j;
+
 	for (i = full - 1; i > top; i--)				/*꽉찬 줄 윗줄 부터 top까지 한줄씩 내리는 반복문*/
 	{
 		for (j = 1; j < col - 1; j++)
@@ -596,6 +606,37 @@ int delete_line(int loc_arr[row][col], int full)
 		}
 	}
 	return 1;
+}
+
+void save_line(int loc_arr[row][col], int toss[], int full)
+{
+	int i;
+
+	for (i = 1; i < col -1; i++)
+	{
+		toss[i - 1] = loc_arr[full][i];
+	}
+}
+
+void toss_line(int loc_arr[row][col], int toss[], int top)
+{
+	int i, j, rand_num;
+
+	for (i = top - 1; i < row - 1; i++)				/*top부터 맨 아래 까지 한줄씩 올리는 반복문*/
+	{
+		for (j = 1; j < col - 1; j++)
+		{
+			loc_arr[i][j] = loc_arr[i + 1][j];
+		}
+	}
+
+	srand(time(NULL));
+	rand_num = rand() % 10;
+
+	toss[rand_num] = 0;
+
+	for (i = 1; i < col - 1; i++)
+		loc_arr[row - 1][i] = toss[i - 1];
 }
 
 void down_block(int loc_arr[row][col])
@@ -635,6 +676,7 @@ void gameplay_1()
 	int end = 0;
 	int line_cnt = 40;
 	int next_block;
+	int top;
 
 	// 2번째로 나올 블록
 	next_block = rand() % 7;
@@ -685,7 +727,8 @@ void gameplay_1()
 		// 한줄이 꽉 찬 경우
 		if (full)
 		{
-			delete_line(loc_arr.loc_arr, full);
+			top = search_top(loc_arr.loc_arr, full);
+			delete_line(loc_arr.loc_arr, full, top);
 			line_cnt--;
 			if (line_cnt == 0)
 			{
@@ -1000,8 +1043,9 @@ void gameplay_2()
 	int move1, move2, full1 = 0, full2 =0;
 	int time = 0, lev1 = 20000, lev2 = 20000;
 	int end1 = 0, end2 = 0;
-	int next_block1;
-	int next_block2;
+	int next_block1, next_block2;
+	int top1, top2;
+	int toss1[10], toss2[10];
 
 	// 2번째 나오는 블록
 	next_block1 = rand() % 7;
@@ -1069,13 +1113,21 @@ void gameplay_2()
 		// 1p, 2p 한줄이 꽉 찬 경우
 		if (full1)
 		{
-			delete_line(loc_arr1.loc_arr, full1);
+			top1 = search_top(loc_arr1.loc_arr, full1);
+			top2 = search_top(loc_arr2.loc_arr, full2);
+			save_line(loc_arr1.loc_arr, toss1, full1);
+			delete_line(loc_arr1.loc_arr, full1, top1);
+			toss_line(loc_arr2.loc_arr, toss1, top2);
 			lev1 -= 50;
 		}
 
 		if (full2)
 		{
-			delete_line(loc_arr2.loc_arr, full2);
+			top1 = search_top(loc_arr1.loc_arr, full1);
+			top2 = search_top(loc_arr2.loc_arr, full2);
+			save_line(loc_arr2.loc_arr, toss2, full2);
+			delete_line(loc_arr2.loc_arr, full2, top2);
+			toss_line(loc_arr1.loc_arr, toss2, top1);
 			lev2 -= 50;
 		}
 
